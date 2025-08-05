@@ -114,7 +114,6 @@ bool move(){
     right_stepper.setCurrent(0);
     left_stepper.setTarget(0);
     right_stepper.setTarget(0);
-    Serial.println("Retargenting");
     switch(path_compiled[path_point]) {
       case PASS:
         return true;
