@@ -100,6 +100,16 @@ void setup() {
   for (int i = 0; i < 160; i++) path[i] = PASS;
 }
 
+int numDigits(uint8_t num) {
+  if (num == 0) return 1;
+  int digits = 0;
+  while (num > 0) {
+    num /= 10;
+    digits++;
+  }
+  return digits;
+}
+
 void loop() {
   // Обновление всех кнопок
   btnForward.update();
@@ -154,15 +164,19 @@ void loop() {
     }
 
     if (btnPlus.wasPressed() && custep >= 1) {
-      path[custep - 1]++;
-      Serial.println("INCREMENT");
-      lcd.clear();
+      if (path[custep - 1] < 255) {
+        path[custep - 1]++;
+        Serial.println("INCREMENT");
+        lcd.clear();
+      }
     }
 
     if (btnMinus.wasPressed() && custep >= 1) {
-      path[custep - 1]--;
-      Serial.println("DECREMENT");
-      lcd.clear();
+      if ((path[custep-2] == FORE && path[custep - 1]>2) || (path[custep-2] != FORE && path[custep - 1]>1)){
+        path[custep - 1]--;
+        Serial.println("DECREMENT");
+        lcd.clear();
+      }
     }
 
     if (btnDelete.wasPressed() && custep >= 2) {
@@ -205,10 +219,9 @@ void loop() {
 
     if (param > 1) {
       if (x >= SCREEN_SIZE_X) { x = 0; y++; }
-      lcd.setCursor(x++, y);
+      lcd.setCursor(x, y);
       lcd.print(param);
+      x += numDigits(param);  // корректно продвигаем курсор
     }
   }
-
-  delay(10);
 }
