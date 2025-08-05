@@ -1,5 +1,9 @@
 #include <LiquidCrystal_I2C.h>
 #include <GyverStepper.h>
+#include <FastLED.h>
+
+#define LED_PIN 2
+#define NUM_LEDS 3
 
 #define PATH_SIZE 160
 #define PATH_COMPILED_SIZE 256
@@ -44,8 +48,16 @@ byte path[PATH_SIZE];
 int custep = 0;
 bool pathing = false;
 
+bool moving = false;
+bool need_compile = true;
+bool compile_success = false;
+
 #include "debounced_button.h"
 #include "movement.h"
+#include "indicator.h"
+
+CRGB leds[NUM_LEDS];
+StatusLEDs status;
 
 // === Объекты кнопок ===
 DebouncedButton btnForward(BTN_FORWARD);
@@ -113,6 +125,13 @@ void setup() {
   lcd.createChar(6, CH_OPEN_LOOP);
 
   for (int i = 0; i < 160; i++) path[i] = PASS;
+
+  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+  status.attach(leds, NUM_LEDS);
+  status.setState(State::Error);
+  status.setState(State::Writing);
+  status.setState(State::Working);
+  status.setState(State::Idle);
 }
 
 int numDigits(uint8_t num) {
@@ -142,7 +161,8 @@ void loop() {
   // Обработка записи
   pathing = digitalRead(BTN_TOGGLE_RECORD);
 
-  if (pathing) {
+  if (pathing && !moving) {
+    status.setState(State::Writing);
     if (btnForward.wasPressed()) {
       path[custep++] = UP;
       path[custep++] = 1;
@@ -211,12 +231,30 @@ void loop() {
       redraw = true;
       lcd.clear();
     }
+    need_compile = true;
   } else {
-    if (btnStartExec.wasPressed()) {
-      Serial.println(compile_path());
-      path_point = 0;
+    if (need_compile) {
+      compile_success = compile_path();
+      need_compile = false;
+      moving = false;
+      if (compile_success) {
+        status.setState(State::Idle);
+      } else {
+        status.setState(State::Error);
+      }
     }
-    move();
+    if (btnStartExec.wasPressed() && compile_success) {
+      path_point = 0;
+      moving = true;
+    }
+    if (moving) {
+      status.setState(State::Working);
+      bool r = move();
+      if (r) {
+        moving = false;
+        status.setState(State::Idle);
+      }
+    }
   }
 
   // === Отображение ===
