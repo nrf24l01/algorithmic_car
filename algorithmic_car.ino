@@ -1,5 +1,14 @@
 #include <LiquidCrystal_I2C.h>
-#include "debounced_button.h"
+#include <GyverStepper.h>
+
+#define PATH_SIZE 160
+#define PATH_COMPILED_SIZE 256
+
+#define MOVS 1000
+#define ROTS 500
+
+GStepper<STEPPER2WIRE> left_stepper(800, A1, A0, 13);
+GStepper<STEPPER2WIRE> right_stepper(800, A3, A2, 13);
 
 // === Пины кнопок ===
 #define BTN_FORWARD        4
@@ -31,9 +40,12 @@
 LiquidCrystal_I2C lcd(I2C_ADDR_ASS, SCREEN_SIZE_X, SCREEN_SIZE_Y);
 
 // === Пути ===
-byte path[160];
+byte path[PATH_SIZE];
 int custep = 0;
 bool pathing = false;
+
+#include "debounced_button.h"
+#include "movement.h"
 
 // === Объекты кнопок ===
 DebouncedButton btnForward(BTN_FORWARD);
@@ -72,6 +84,9 @@ byte CH_OPEN_LOOP[] = {
 
 void setup() {
   Serial.begin(9600);
+
+  // Steppers setup
+  setup_steppers();
 
   // Инициализация кнопок
   btnForward.begin();
@@ -186,6 +201,12 @@ void loop() {
       Serial.println("DELETE");
       lcd.clear();
     }
+  } else {
+    if (btnStartExec.wasPressed()) {
+      Serial.println(compile_path());
+      path_point = 0;
+    }
+    move();
   }
 
   // === Отображение ===
