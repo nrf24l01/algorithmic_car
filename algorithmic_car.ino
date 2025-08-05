@@ -137,6 +137,7 @@ void loop() {
   btnMinus.update();
   btnStartExec.update();
   btnDelete.update();
+  bool redraw = false;
 
   // Обработка записи
   pathing = digitalRead(BTN_TOGGLE_RECORD);
@@ -146,36 +147,42 @@ void loop() {
       path[custep++] = UP;
       path[custep++] = 1;
       Serial.println("UP");
+      redraw = true;
     }
 
     if (btnBackward.wasPressed()) {
       path[custep++] = DOWN;
       path[custep++] = 1;
       Serial.println("DOWN");
+      redraw = true;
     }
 
     if (btnLeft.wasPressed()) {
       path[custep++] = LEFT;
       path[custep++] = 1;
       Serial.println("LEFT");
+      redraw = true;
     }
 
     if (btnRight.wasPressed()) {
       path[custep++] = RIGHT;
       path[custep++] = 1;
       Serial.println("RIGHT");
+      redraw = true;
     }
 
     if (btnOpenLoop.wasPressed()) {
       path[custep++] = FORS;
       path[custep++] = 0;
       Serial.println("OPEN (");
+      redraw = true;
     }
 
     if (btnCloseLoop.wasPressed()) {
       path[custep++] = FORE;
       path[custep++] = 2;
       Serial.println("CLOSE )");
+      redraw = true;
     }
 
     if (btnPlus.wasPressed() && custep >= 1) {
@@ -183,6 +190,7 @@ void loop() {
         path[custep - 1]++;
         Serial.println("INCREMENT");
         lcd.clear();
+        redraw = true;
       }
     }
 
@@ -190,6 +198,7 @@ void loop() {
       if ((path[custep-2] == FORE && path[custep - 1]>2) || (path[custep-2] != FORE && path[custep - 1]>1)){
         path[custep - 1]--;
         Serial.println("DECREMENT");
+        redraw = true;
         lcd.clear();
       }
     }
@@ -199,6 +208,7 @@ void loop() {
       path[custep] = PASS;
       path[custep + 1] = PASS;
       Serial.println("DELETE");
+      redraw = true;
       lcd.clear();
     }
   } else {
@@ -210,39 +220,41 @@ void loop() {
   }
 
   // === Отображение ===
-  lcd.setCursor(0, 0);
-  int x = 0, y = 0;
-  for (int i = 0; i < custep; i += 2) {
-    if (x >= SCREEN_SIZE_X) {
-      x = 0;
-      y++;
-      if (y >= SCREEN_SIZE_Y) break;
-    }
+  if (redraw) {
+    lcd.setCursor(0, 0);
+    int x = 0, y = 0;
+    for (int i = 0; i < custep; i += 2) {
+      if (x >= SCREEN_SIZE_X) {
+        x = 0;
+        y++;
+        if (y >= SCREEN_SIZE_Y) break;
+      }
 
-    byte cmd = path[i];
-    byte param = path[i + 1];
+      byte cmd = path[i];
+      byte param = path[i + 1];
 
-    lcd.setCursor(x++, y);
-    switch (cmd) {
-      case UP:    lcd.write((uint8_t)0); break;
-      case DOWN:  lcd.write((uint8_t)1); break;
-      case RIGHT: lcd.write((uint8_t)2); break;
-      case LEFT:  lcd.write((uint8_t)3); break;
-      case FORS:  lcd.write((uint8_t)6); break;
-      case FORE:
-        lcd.write((uint8_t)5);
+      lcd.setCursor(x++, y);
+      switch (cmd) {
+        case UP:    lcd.write((uint8_t)0); break;
+        case DOWN:  lcd.write((uint8_t)1); break;
+        case RIGHT: lcd.write((uint8_t)2); break;
+        case LEFT:  lcd.write((uint8_t)3); break;
+        case FORS:  lcd.write((uint8_t)6); break;
+        case FORE:
+          lcd.write((uint8_t)5);
+          if (x >= SCREEN_SIZE_X) { x = 0; y++; }
+          lcd.setCursor(x++, y);
+          lcd.write((uint8_t)4); // точка
+          break;
+        default: break;
+      }
+
+      if (param > 1) {
         if (x >= SCREEN_SIZE_X) { x = 0; y++; }
-        lcd.setCursor(x++, y);
-        lcd.write((uint8_t)4); // точка
-        break;
-      default: break;
-    }
-
-    if (param > 1) {
-      if (x >= SCREEN_SIZE_X) { x = 0; y++; }
-      lcd.setCursor(x, y);
-      lcd.print(param);
-      x += numDigits(param);  // корректно продвигаем курсор
+        lcd.setCursor(x, y);
+        lcd.print(param);
+        x += numDigits(param);  // корректно продвигаем курсор
+      }
     }
   }
 }
