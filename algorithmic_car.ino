@@ -8,8 +8,8 @@
 #define PATH_SIZE 160
 #define PATH_COMPILED_SIZE 256
 
-#define MOVS 1000
-#define ROTS 500
+#define MOVS 1428
+#define ROTS 930
 
 GStepper<STEPPER2WIRE> left_stepper(800, A1, A0, 13);
 GStepper<STEPPER2WIRE> right_stepper(800, A3, A2, 13);
