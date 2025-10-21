@@ -96,7 +96,9 @@ byte CH_OPEN_LOOP[] = {
 
 void setup() {
   Serial.begin(9600);
-
+  
+  pinMode(BTN_TOGGLE_RECORD, INPUT_PULLUP);
+  
   // Steppers setup
   setup_steppers();
 
