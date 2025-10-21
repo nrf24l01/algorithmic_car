@@ -11,8 +11,8 @@
 #define MOVS 1428
 #define ROTS 930
 
-GStepper<STEPPER2WIRE> left_stepper(800, A1, A0, 13);
-GStepper<STEPPER2WIRE> right_stepper(800, A3, A2, 13);
+GStepper<STEPPER2WIRE> left_stepper(800, A0, A1, 13);
+GStepper<STEPPER2WIRE> right_stepper(800, A2, A3, 13);
 
 // === Пины кнопок ===
 #define BTN_FORWARD        4
